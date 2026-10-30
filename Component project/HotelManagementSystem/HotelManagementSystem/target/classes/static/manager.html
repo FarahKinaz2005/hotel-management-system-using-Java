@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurum — Manager Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --dark: #1A1610;
+    --cream: #F7F3EC;
+    --text: #3A2E1C;
+    --muted: #7A6B52;
+    --white: #FDFAF5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: 'Jost', sans-serif; 
+    background: #f8f5f0; 
+    color: var(--text); 
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    background: var(--dark);
+    color: white;
+    padding: 2rem 1.5rem;
+    height: 100vh;
+    position: fixed;
+    overflow-y: auto;
+  }
+  .sb-logo h1 { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 2.3rem; }
+  .sb-logo p { color: var(--gold-light); font-size: 0.85rem; margin-top: -5px; }
+
+  .sb-user { margin: 2.5rem 0; padding: 1.2rem; background: rgba(255,255,255,0.08); border-radius: 8px; }
+  .name { font-size: 1.15rem; font-weight: 500; }
+  .role { color: var(--gold); font-size: 0.9rem; }
+
+  .sb-sec { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin: 2rem 0 0.8rem; }
+
+  .sb-nav a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0.9rem 1rem; color: #ddd; text-decoration: none;
+    border-radius: 6px; margin-bottom: 4px;
+  }
+  .sb-nav a:hover, .sb-nav a.active { background: rgba(201,168,76,0.25); color: white; }
+
+  .logout-btn {
+    width: 100%; padding: 0.9rem; background: transparent;
+    border: 1px solid #666; color: #ddd; border-radius: 6px;
+    cursor: pointer; margin-top: 3rem;
+  }
+
+  /* Main Content */
+  .main { margin-left: 280px; flex: 1; padding: 2.5rem; }
+
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 2.5rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .stat-card {
+    background: white;
+    padding: 1.8rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .stat-card .label { font-size: 0.9rem; color: var(--muted); }
+  .stat-card .value { font-size: 2.2rem; font-weight: 600; margin: 0.5rem 0; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-logo"><h1>AURUM</h1><p>Management Portal</p></div>
+  <div class="sb-user">
+    <div class="name" id="sb-name">General Manager</div>
+    <div class="role">🏨 General Manager</div>
+  </div>
+  <div class="sb-sec">Navigation</div>
+  <ul class="sb-nav">
+    <li><a href="#" class="active" onclick="show('overview',this)">📊 Overview</a></li>
+    <li><a href="#" onclick="show('reservations',this)">📋 Reservations</a></li>
+    <li><a href="#" onclick="show('staff',this)">👥 Staff</a></li>
+    <li><a href="#" onclick="show('revenue',this)">💰 Revenue</a></li>
+  </ul>
+  <button class="logout-btn" onclick="logout()">⬅ Sign Out</button>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h2 id="page-title">Overview</h2>
+  </div>
+
+  <!-- OVERVIEW PANEL -->
+  <div id="p-overview" class="panel active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Occupied Rooms</div>
+        <div class="value" id="occupied">87/156</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Today's Check-ins</div>
+        <div class="value" id="checkins">14</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pending Reservations</div>
+        <div class="value" id="pending">4</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Revenue Today</div>
+        <div class="value" id="revenue">$8,740</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><span class="ct">Recent Reservations</span><button onclick="loadReservations()">↻ Refresh</button></div>
+      <table id="res-tbody"></table>
+    </div>
+  </div>
+
+  <!-- Other panels (Reservations, Staff, Revenue) can be expanded later -->
+</main>
+
+<script>
+const API = 'http://localhost:8080/api';
+
+const user = JSON.parse(sessionStorage.getItem('hotelUser') || '{}');
+if(!user.role) window.location.href = 'login.html';
+
+document.getElementById('sb-name').textContent = user.fullName || 'General Manager';
+
+function show(page, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('p-' + page).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('page-title').textContent = page === 'overview' ? 'Overview' : 
+                                                    page === 'reservations' ? 'All Reservations' : 'Staff Overview';
+}
+
+// Fetch dynamic data
+async function loadDashboard() {
+  try {
+    const res = await fetch(API + '/reservations');
+    const reservations = await res.json();
+
+    // Example calculations - you can improve these with real backend endpoints
+    document.getElementById('pending').textContent = reservations.length;
+    document.getElementById('res-tbody').innerHTML = reservations.map(r => `
+      <tr>
+        <td>${r.firstName || ''}</td>
+        <td>${r.roomType || ''}</td>
+        <td>${r.checkIn || ''}</td>
+        <td>${r.checkOut || ''}</td>
+        <td>Confirmed</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    console.error("Could not load dashboard data", e);
+  }
+}
+
+async function loadReservations() {
+  loadDashboard();
+}
+
+function logout() {
+  sessionStorage.clear();
+  window.location.href = 'login.html';
+}
+
+// Load data when page opens
+loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurum Grand Hotel — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--dark:#1A1610;--dark-mid:#2C2416;--cream:#F7F3EC;--cream-dark:#EDE5D4;--text:#3A2E1C;--muted:#7A6B52;--white:#FDFAF5;--red:#C0392B;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Jost',sans-serif;background:linear-gradient(135deg,var(--dark) 0%,var(--dark-mid) 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.box{background:var(--white);width:440px;padding:3rem;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.logo{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--gold);text-align:center;margin-bottom:0.3rem;}
+.sub{text-align:center;font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:2rem;}
+.fg{display:flex;flex-direction:column;gap:0.32rem;margin-bottom:1rem;}
+.fg label{font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);}
+.fg input{border:1px solid var(--cream-dark);background:var(--cream);padding:0.75rem 1rem;font-size:0.95rem;font-family:'Jost',sans-serif;border-radius:6px;outline:none;transition:border-color 0.2s;}
+.fg input:focus{border-color:var(--gold);}
+.btn{width:100%;background:var(--gold);color:var(--dark);border:none;padding:0.9rem;font-size:0.85rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;border-radius:6px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s;font-family:'Jost',sans-serif;}
+.btn:hover{opacity:0.85;}
+.err{background:#FADBD8;color:var(--red);padding:0.65rem 0.9rem;border-radius:6px;font-size:0.82rem;margin-top:0.75rem;display:none;}
+.demo{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--cream-dark);}
+.demo p{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;}
+.db{background:var(--cream);border:1px solid var(--cream-dark);padding:0.42rem 0.55rem;font-size:0.72rem;border-radius:4px;cursor:pointer;text-align:left;font-family:'Jost',sans-serif;transition:border-color 0.2s;}
+.db:hover{border-color:var(--gold);}
+.db strong{display:block;font-size:0.75rem;color:var(--text);}
+.db span{color:var(--muted);font-size:0.67rem;}
+.loading{text-align:center;color:var(--muted);font-size:0.82rem;margin-top:0.75rem;display:none;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">AURUM</div>
+  <div class="sub">Grand Hotel Management System</div>
+
+  <div class="fg"><label>Username</label><input type="text" id="u" placeholder="Enter your username"></div>
+  <div class="fg"><label>Password</label><input type="password" id="p" placeholder="Enter your password" onkeydown="if(event.key==='Enter')login()"></div>
+  <button class="btn" onclick="login()">Sign In</button>
+  <div id="err" class="err"></div>
+  <div id="loading" class="loading">Signing in...</div>
+
+  <div class="demo">
+    <p>Quick Login — Demo Accounts</p>
+    <div class="demo-grid">
+      <button class="db" onclick="fill('manager1','pass123')"><strong>🏨 General Manager</strong><span>manager1</span></button>
+      <button class="db" onclick="fill('guest1','pass123')"><strong>👤 Guest</strong><span>guest1</span></button>
+      <button class="db" onclick="fill('frontdesk1','pass123')"><strong>🛎️ Front Desk</strong><span>frontdesk1</span></button>
+      <button class="db" onclick="fill('kitchen1','pass123')"><strong>🍽️ Kitchen</strong><span>kitchen1</span></button>
+      <button class="db" onclick="fill('housekeeping1','pass123')"><strong>🧹 Housekeeping</strong><span>housekeeping1</span></button>
+      <button class="db" onclick="fill('maintenance1','pass123')"><strong>🔧 Maintenance</strong><span>maintenance1</span></button>
+      <button class="db" onclick="fill('spa1','pass123')"><strong>💆 Spa</strong><span>spa1</span></button>
+      <button class="db" onclick="fill('security1','pass123')"><strong>🔒 Security</strong><span>security1</span></button>
+      <button class="db" onclick="fill('hr1','pass123')"><strong>👥 HR</strong><span>hr1</span></button>
+      <button class="db" onclick="fill('billing1','pass123')"><strong>💳 Billing</strong><span>billing1</span></button>
+      <button class="db" onclick="fill('sales1','pass123')"><strong>🎪 Sales</strong><span>sales1</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8080/api';
+const ROUTES = {
+  MANAGER:'manager.html', GUEST:'guest.html', FRONT_DESK:'frontdesk.html',
+  KITCHEN:'kitchen.html', HOUSEKEEPING:'housekeeping.html', MAINTENANCE:'maintenance.html',
+  SPA:'spa.html', SECURITY:'security.html', HR:'hr.html', BILLING:'billing.html', SALES:'sales.html'
+};
+
+function fill(u,p){ document.getElementById('u').value=u; document.getElementById('p').value=p; }
+
+async function login(){
+  const username=document.getElementById('u').value.trim();
+  const password=document.getElementById('p').value.trim();
+  const errEl=document.getElementById('err');
+  const loadEl=document.getElementById('loading');
+  errEl.style.display='none';
+  if(!username||!password){errEl.style.display='block';errEl.textContent='Please enter username and password.';return;}
+  loadEl.style.display='block';
+  try{
+    const res=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    loadEl.style.display='none';
+    if(!res.ok){errEl.style.display='block';errEl.textContent='Invalid username or password.';return;}
+    const user=await res.json();
+    // store user in sessionStorage so role pages can read it
+    sessionStorage.setItem('hotelUser', JSON.stringify(user));
+    const page = ROUTES[user.role];
+    if(page) window.location.href = page;
+    else{errEl.style.display='block';errEl.textContent='Unknown role: '+user.role;}
+  }catch(e){
+    loadEl.style.display='none';
+    errEl.style.display='block';
+    errEl.textContent='Cannot reach server. Make sure Spring Boot is running on port 8080.';
+  }
+}
+</script>
+</body>
+</html>

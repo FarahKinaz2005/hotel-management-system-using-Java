@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurum — Guest Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --dark: #1A1610;
+    --cream: #F7F3EC;
+    --text: #3A2E1C;
+    --muted: #7A6B52;
+    --white: #FDFAF5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: 'Jost', sans-serif; 
+    background: #f8f5f0; 
+    color: var(--text); 
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ==================== SIDEBAR ==================== */
+  .sidebar {
+    width: 280px;
+    background: var(--dark);
+    color: white;
+    padding: 2rem 1.5rem;
+    height: 100vh;
+    position: fixed;
+    overflow-y: auto;
+  }
+  .sb-logo h1 {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 2.3rem;
+  }
+  .sb-logo p { color: var(--gold-light); font-size: 0.85rem; margin-top: -5px; }
+
+  .sb-user {
+    margin: 2.5rem 0;
+    padding: 1.2rem;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+  }
+  .name { font-size: 1.15rem; font-weight: 500; }
+  .role { color: var(--gold); font-size: 0.9rem; }
+
+  .sb-sec {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 2rem 0 0.8rem;
+  }
+
+  .sb-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.9rem 1rem;
+    color: #ddd;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    transition: 0.2s;
+  }
+  .sb-nav a:hover, .sb-nav a.active {
+    background: rgba(201,168,76,0.25);
+    color: white;
+  }
+
+  .logout-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: transparent;
+    border: 1px solid #666;
+    color: #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 3rem;
+  }
+
+  /* ==================== MAIN CONTENT ==================== */
+  .main {
+    margin-left: 280px;
+    flex: 1;
+    padding: 2.5rem;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .ch {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.8rem;
+  }
+  .ct { font-size: 1.25rem; font-weight: 500; color: var(--text); }
+
+  .fg {
+    margin-bottom: 1.3rem;
+  }
+  .fg label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+  .fg input, .fg select, .fg textarea {
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+  }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+
+  .btn-g {
+    background: var(--gold);
+    color: var(--dark);
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .msg {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+  }
+  .msg.ok { background: #e8f5e9; color: #2e7d32; }
+  .msg.err { background: #ffebee; color: #c62828; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  th { color: var(--muted); font-weight: 500; }
+
+  @media (max-width: 992px) {
+    .sidebar { position: relative; width: 100%; height: auto; }
+    .main { margin-left: 0; }
+    .two { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-logo"><h1>AURUM</h1><p>Guest Portal</p></div>
+  <div class="sb-user">
+    <div class="name" id="sb-name">Guest</div>
+    <div class="role">👤 Hotel Guest</div>
+  </div>
+  <div class="sb-sec">My Stay</div>
+  <ul class="sb-nav">
+    <li><a href="#" class="active" onclick="show('book',this)">🛎️ Book a Room</a></li>
+    <li><a href="#" onclick="show('myres',this)">🛏️ My Reservations</a></li>
+    <li><a href="#" onclick="show('services',this)">🛎️ Request Services</a></li>
+    <li><a href="#" onclick="show('billing',this)">💰 My Billing</a></li>
+  </ul>
+  <button class="logout-btn" onclick="logout()">⬅ Sign Out</button>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h2 id="page-title">Book a Room</h2>
+  </div>
+
+  <!-- BOOK ROOM -->
+  <div id="p-book" class="panel active">
+    <div class="card">
+      <div class="ch"><span class="ct">Make a Reservation</span></div>
+      <div class="two">
+        <div>
+          <div class="fg"><label>Full Name</label><input type="text" id="g-name" placeholder="Your full name"></div>
+          <div class="fg"><label>Email</label><input type="email" id="g-email" placeholder="your@email.com"></div>
+          <div class="fg"><label>Room Type</label>
+            <select id="g-room">
+              <option value="">Select a room</option>
+              <option value="DELUXE">Deluxe Room — $220/night</option>
+              <option value="JUNIOR_SUITE">Junior Suite — $420/night</option>
+              <option value="GRAND_SUITE">Grand Suite — $850/night</option>
+              <option value="PRESIDENTIAL">Presidential Suite — $1,500/night</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="fg"><label>Check-In Date</label><input type="date" id="g-in"></div>
+          <div class="fg"><label>Check-Out Date</label><input type="date" id="g-out"></div>
+          <div class="fg"><label>Special Requests</label><textarea id="g-req" rows="5" placeholder="Any special requirements..."></textarea></div>
+        </div>
+      </div>
+      <button class="btn-g" onclick="bookRoom()">Confirm Reservation</button>
+      <div id="book-msg" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- MY RESERVATIONS -->
+  <div id="p-myres" class="panel">
+    <div class="card">
+      <div class="ch"><span class="ct">My Reservations</span><button onclick="loadMyRes()">↻ Refresh</button></div>
+      <table id="myres-tbody"></table>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = 'http://localhost:8080/api';
+
+const user = JSON.parse(sessionStorage.getItem('hotelUser') || '{}');
+if(!user.role) window.location.href = 'login.html';
+
+document.getElementById('sb-name').textContent = user.fullName || 'Guest';
+
+// Default dates
+const today = new Date().toISOString().split('T')[0];
+const next3 = new Date(Date.now() + 3*86400000).toISOString().split('T')[0];
+document.getElementById('g-in').value = today;
+document.getElementById('g-out').value = next3;
+
+function show(page, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('p-' + page).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('page-title').textContent = page === 'book' ? 'Book a Room' : 'My Reservations';
+}
+
+async function bookRoom() {
+  const msg = document.getElementById('book-msg');
+  msg.className = 'msg';
+
+  const payload = {
+    firstName: document.getElementById('g-name').value.trim(),
+    email: document.getElementById('g-email').value.trim(),
+    roomType: document.getElementById('g-room').value,
+    checkIn: document.getElementById('g-in').value,
+    checkOut: document.getElementById('g-out').value,
+    specialRequests: document.getElementById('g-req').value.trim()
+  };
+
+  if (!payload.firstName || !payload.email || !payload.roomType || !payload.checkIn || !payload.checkOut) {
+    msg.textContent = "Please fill all required fields!";
+    msg.className = 'msg err';
+    return;
+  }
+
+  try {
+    const res = await fetch(API + '/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      msg.textContent = "✅ Reservation successfully recorded!";
+      msg.className = 'msg ok';
+      // Clear form after success
+      document.getElementById('g-name').value = '';
+      document.getElementById('g-req').value = '';
+    } else {
+      msg.textContent = "Failed to save. Please try again.";
+      msg.className = 'msg err';
+    }
+  } catch (e) {
+    console.error(e);
+    msg.textContent = "Cannot connect to server. Is Spring Boot running?";
+    msg.className = 'msg err';
+  }
+}
+
+function logout() {
+  sessionStorage.clear();
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>
